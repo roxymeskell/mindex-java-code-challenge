@@ -84,3 +84,25 @@ Compensation from the persistence layer.
 
 ## Delivery
 Please upload your results to a publicly accessible Git repo. Free ones are provided by Github and Bitbucket.
+
+
+
+### Task 1
+Question: Can one Employee have more than one direct supervisor? There does not seem to be any constraint, especially considering the data structure given.
+(I.e., an employee having a list of direct reports as opposed to an employee having a singular direct supervisor.)
+This means that, if not careful, employees in reporting structures could be counted twice.
+The lack on constraints also appear to let an employee possibly report directly to themselves, or in a loop.
+
+Assuming the reporting structure is a tree, a breadth first search could be implemented using the new `ReportingStructure` class for each found employee to get their own count of reports.
+``` java
+// This is actually depth-first search
+// Could maybe thread to make this faster
+public int getNumberOfReports() {
+  int numberOfReports = 0;
+  for(Employee dReport : this.employee.directReports) {
+    numberOfReports += 1 + (new ReportingStructure(dReport)).getNumberOfReports();
+  }
+  return numberOfReports;
+}
+```
+First thought was nailing down the algorithm. Then discovered that the employee data for direct reports wasn't fleshed out beyond their IDs (which makes sense). Reworked code to check `employeeRepository` for each user ID.
