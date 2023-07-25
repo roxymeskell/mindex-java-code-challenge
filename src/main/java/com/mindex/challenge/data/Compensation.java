@@ -3,20 +3,11 @@ package com.mindex.challenge.data;
 import java.util.Date;
 
 public class Compensation {
-    private String id; // Adding unique id to compensation
     private Employee employee;
     private float salary;
     private Date effectiveDate;
 
     public Compensation() {
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public Employee getEmployee() {

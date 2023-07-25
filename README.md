@@ -108,13 +108,29 @@ My first thought was nailing down the algorithm. I used a breadth-first search w
 
 For testing, I mocked responses from `employeeRepository` in order to present different scenarios with different reporting structures. The tests were used to validate the algorithm used to discover the reporting structure.
 
+
+**Note:**
+Another way I found of find the `ReportingStructure` be be through a method to `EmployeeRepository` that used an aggregate pipeline to query for all the relations and counting them, which I included in a code snippet below. However, this would require using a more recent version of MongoDB than I was provided.
+Though I believe I can possibly specify a version of MongoDB to use by adding the line `spring.mongodb.embedded.version=3.6.4` to the `applications.properties` file.
+```java
+@Aggregation(pipeline = {
+    "{ '$match' : { 'employeeId': '?0' } }",
+    "{'$graphLookup': {" +
+    "'from': 'employee', 'startWith': '$directReports.employeeId'," +
+    "'connectFromField': 'directReports.employeeId', 'connectToField': 'employeeId'," +
+    "'as': 'allReports', 'restrictSearchWithMatch': { 'employeeId': '?0' } } }",
+    "{ '$project' : { 'employee': { 'employeeId': '$employeeId' }, 'numberOfReports': { '$size': '$allReports' } } }"
+})
+ReportingStructure findNumberOfReports(String employeeId);
+```
+
 ### Task 2
 I first created all the class components I would need: the data class, the service class, and the controller. To persist the data, and repository was also needed.
 
 The description of `Compensation` did not indicate that it had its own primary id, and instead was defined by the id of the `Employee` it was associated with.
 This presented an issue when trying to query for `Compensation` using only an `employeeId`, as the field wasn't defined directly on the data class.
 
-Because `Compensation` is defined with an `Employee` and queried through `employeeId`, I made sure to check that an `Employee` existed before creating a `Compensation` object for that employee. Additionally, when reading compenstaion for an employee, if a `Compensation` object is not found, then it is also checked if an `Employee` onject existed, and errors messages are given accordingly.
+Because `Compensation` is defined with an `Employee` and queried through `employeeId`, I made sure to check that an `Employee` existed before creating a `Compensation` object for that employee. Additionally, when reading compenstaion for an employee, if a `Compensation` object is not found, then it is also checked if an `Employee` object existed, and errors messages are given accordingly.
 
 When creating multiple `Compensation` objects for a single employee, there was an issue with multiple results being returned which was unexpected by the method. To combat this, I set up `CompensationRepository::findByEmployeeId` to query using an aggregation method.
 ```java

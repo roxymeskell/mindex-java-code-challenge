@@ -7,12 +7,14 @@ import com.mindex.challenge.service.ReportingStructureService;
 import java.util.LinkedList;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
@@ -41,21 +43,21 @@ public class ReportingStructureServiceImplTest {
         reportingStructureUrl = "http://localhost:" + port + "/reportingStructure/{id}";
     }
 
-    // Any requests besides read should fail with a 400 error
-    
     @Test
-    public void testRead() {
+    @DisplayName("Assert fails on employee not existing")
+    public void testReadForEmployeeDoesNotExist() {
         // Read check
-        ReportingStructure readReportingStructure = restTemplate.getForEntity(
+        ResponseEntity<ReportingStructure> response = restTemplate.getForEntity(
             reportingStructureUrl,
             ReportingStructure.class,
-            "16a596ae-edd3-4847-99fe-c4518e82c86f"
-        ).getBody();
-        assertEquals(4, readReportingStructure.getNumberOfReports());
+            "invalid-employee"
+        );
+        assertEquals(500, response.getStatusCodeValue());
     }
 
     @Test
-    public void testReadNoReports() {
+    @DisplayName("Assert returns 0 reports when given an employee with no reports")
+    public void testReadForNoReports() {
         String testEmployeeId = setupEmployees(new int[][]{{}});
         ReportingStructure readReportingStructure = restTemplate.getForEntity(
             reportingStructureUrl,
@@ -66,7 +68,8 @@ public class ReportingStructureServiceImplTest {
     }
 
     @Test
-    public void testReadHasReports() {
+    @DisplayName("Assert returns reports when given tree")
+    public void testReadForHasReports() {
         String testEmployeeId = setupEmployees(new int[][]{{1, 2}, {3, 4}, {5}, {}, {}, {}});
         ReportingStructure readReportingStructure = restTemplate.getForEntity(
             reportingStructureUrl,
@@ -77,7 +80,8 @@ public class ReportingStructureServiceImplTest {
     }
 
     @Test
-    public void testReadMultipleSupervisers() {
+    @DisplayName("Assert returns reports when given an employee who reports to two others")
+    public void testReadForMultipleSupervisers() {
         String testEmployeeId = setupEmployees(new int[][]{{1, 2}, {3, 4}, {4, 5}, {}, {}, {}});
         ReportingStructure readReportingStructure = restTemplate.getForEntity(
             reportingStructureUrl,
@@ -88,7 +92,8 @@ public class ReportingStructureServiceImplTest {
     }
 
     @Test
-    public void testReadReportsToSelf() {
+    @DisplayName("Assert returns reports when given employee reporting to themself")
+    public void testReadForReportsToSelf() {
         String testEmployeeId = setupEmployees(new int[][]{{0}});
         ReportingStructure readReportingStructure = restTemplate.getForEntity(
             reportingStructureUrl,
@@ -121,32 +126,5 @@ public class ReportingStructureServiceImplTest {
             given(employeeRepository.findByEmployeeId(id)).willReturn(e);
         }
         return "0";
-
-        // LinkedList<Employee> employees = new LinkedList<>();
-        // // Make employees
-        // for (int i = 0; i < directReportAdj.length; i++) {
-        //     String id = Integer.toString(i);
-        //     employees.add(new Employee());
-        // }
-
-        // given(employeeRepository.findByEmployeeId(testEId)).willReturn(testEmployee);
-
-        // for (int i = 0; i < directReportAdj.length; i++) {
-        //     String id = Integer.toString(i);
-        //     int[] dReportAdj = directReportAdj[i];
-        //     employees.get(i).setEmployeeId(id);
-        //     employees.get(i).setDirectReports(
-        //         new LinkedList<Employee>() {{
-        //             for (int r : dReportAdj) {
-        //                 // if (r < 0 || r >= directReportAdj.length)
-        //                 //     throw new Exception("Index for direct report specified is out of bounds.");
-        //                 add(employees.get(r));
-        //             }
-        //         }}
-        //     );
-        // }
-
-        // // Return first employee
-        // return employees.peek().getEmployeeId();
     }
 }

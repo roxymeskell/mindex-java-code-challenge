@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.UUID;
 
 @Service
 public class CompensationServiceImpl implements CompensationService {
@@ -25,13 +24,11 @@ public class CompensationServiceImpl implements CompensationService {
     public Compensation create(Compensation compensation) {
 
         // Checking if for valid employee
-        // if (!employeeRepository.existsById(compensation.getEmployee().getEmployeeId())) {
         if (employeeRepository.findByEmployeeId(compensation.getEmployee().getEmployeeId()) == null) {
             throw new RuntimeException("Invalid employee: " + compensation.getEmployee().getEmployeeId());
         }
 
-        compensation.setId(UUID.randomUUID().toString());
-
+        LOG.debug("Creating compensation for employee [{}]", compensation.getEmployee().getEmployeeId());
         compensationRepository.insert(compensation);
 
         return compensation;

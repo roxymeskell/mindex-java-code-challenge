@@ -5,15 +5,13 @@ import com.mindex.challenge.data.Employee;
 import com.mindex.challenge.service.CompensationService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import java.util.Date;
 
@@ -43,27 +41,58 @@ public class CompensationServiceImplTest {
     }
 
     @Test
+    @DisplayName("Assert fails when Compenstation is created for an Employee that does not exist")
+    public void testCreateForEmployeeDoesNotExist() {
+        Compensation testCompensation = new Compensation() {{
+            setEmployee(new Employee() {{ setEmployeeId("invalid-employee"); }});
+            setSalary(125000);
+            setEffectiveDate(new Date(2009, 11, 15));
+        }};
+        ResponseEntity<Compensation> response = restTemplate.postForEntity(compensationUrl, testCompensation, Compensation.class);
+        assertEquals(500, response.getStatusCodeValue());
+    }
+
+
+    @Test
+    @DisplayName("Test if create and read for compensation works as expected")
     public void testCreateRead() {
-        Compensation testCompensation = new Compensation();
-        testCompensation.setEmployee(new Employee() {{ setEmployeeId("16a596ae-edd3-4847-99fe-c4518e82c86f"); }});
-        testCompensation.setSalary(125000);
-        testCompensation.setEffectiveDate(new Date(2009, 7, 15));
+        String employeeId = "16a596ae-edd3-4847-99fe-c4518e82c86f";
+        Compensation testCompensation = new Compensation() {{
+            setEmployee(new Employee() {{ setEmployeeId(employeeId ); }});
+            setSalary(125000);
+            setEffectiveDate(new Date(2009, 11, 15));
+        }};
 
-        // Create checks
+        Compensation testCompensationNew = new Compensation() {{
+            setEmployee(new Employee() {{ setEmployeeId(employeeId ); }});
+            setSalary(150000);
+            setEffectiveDate(new Date(2013, 11, 15));
+        }};
+
+        // Create check
         Compensation createdCompensation = restTemplate.postForEntity(compensationUrl, testCompensation, Compensation.class).getBody();
-
         assertNotNull(createdCompensation.getEmployee());
         assertNotNull(createdCompensation.getEmployee().getEmployeeId());
         assertCompensationEquivalence(testCompensation, createdCompensation);
 
 
-        // Read checks
-        Compensation readCompensation = restTemplate.getForEntity(compensationIdUrl, Compensation.class, createdCompensation.getEmployee().getEmployeeId()).getBody();
+        // Read check
+        Compensation readCompensation = restTemplate.getForEntity(compensationIdUrl, Compensation.class, employeeId ).getBody();
         assertNotNull(readCompensation.getEmployee());
         assertEquals(createdCompensation.getEmployee().getEmployeeId(), readCompensation.getEmployee().getEmployeeId());
         assertCompensationEquivalence(createdCompensation, readCompensation);
 
-        // Also probably want to check want happens if an employee gets two salary updates
+        // 2nd create check for same employee
+        createdCompensation = restTemplate.postForEntity(compensationUrl, testCompensationNew, Compensation.class).getBody();
+        assertNotNull(createdCompensation.getEmployee());
+        assertNotNull(createdCompensation.getEmployee().getEmployeeId());
+        assertCompensationEquivalence(testCompensationNew, createdCompensation);
+
+        // 2nd read check for same employee (should return a single Compensation object which is the more recent of the two)
+        readCompensation = restTemplate.getForEntity(compensationIdUrl, Compensation.class, employeeId).getBody();
+        assertNotNull(readCompensation.getEmployee());
+        assertEquals(createdCompensation.getEmployee().getEmployeeId(), readCompensation.getEmployee().getEmployeeId());
+        assertCompensationEquivalence(createdCompensation, readCompensation);
     }
 
     private void assertCompensationEquivalence(Compensation expected, Compensation actual) {
