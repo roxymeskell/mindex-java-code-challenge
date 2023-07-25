@@ -86,6 +86,7 @@ Compensation from the persistence layer.
 Please upload your results to a publicly accessible Git repo. Free ones are provided by Github and Bitbucket.
 
 
+# Challange Notes
 
 ### Task 1
 Question: Can one Employee have more than one direct supervisor? There does not seem to be any constraint, especially considering the data structure given.
@@ -93,16 +94,34 @@ Question: Can one Employee have more than one direct supervisor? There does not 
 This means that, if not careful, employees in reporting structures could be counted twice.
 The lack on constraints also appear to let an employee possibly report directly to themselves, or in a loop.
 
-Assuming the reporting structure is a tree, a breadth first search could be implemented using the new `ReportingStructure` class for each found employee to get their own count of reports.
+If the reporting structure was guaranteed to always be a tree, a recursive depth first search would work.
 ``` java
-// This is actually depth-first search
-// Could maybe thread to make this faster
-public int getNumberOfReports() {
-  int numberOfReports = 0;
-  for(Employee dReport : this.employee.directReports) {
-    numberOfReports += 1 + (new ReportingStructure(dReport)).getNumberOfReports();
-  }
-  return numberOfReports;
+int getNumberOfReports(Employee employee) {
+    int numberOfReports = 0;
+    for(Employee dReport : this.employee.directReports) {
+        numberOfReports += 1 + this.getNumberOfReports(dReport);
+    }
+    return numberOfReports;
 }
 ```
-First thought was nailing down the algorithm. Then discovered that the employee data for direct reports wasn't fleshed out beyond their IDs (which makes sense). Reworked code to check `employeeRepository` for each user ID.
+My first thought was nailing down the algorithm. I used a breadth-first search while keeping track of employees I had already seen. Then I discovered that the employee data for direct reports were not fleshed out beyond their IDs (which makes sense). Reworked code to check `employeeRepository` for each employee ID found in order to trace the reporting structure.
+
+For testing, I mocked responses from `employeeRepository` in order to present different scenarios with different reporting structures. The tests were used to validate the algorithm used to discover the reporting structure.
+
+### Task 2
+I first created all the class components I would need: the data class, the service class, and the controller. To persist the data, and repository was also needed.
+
+The description of `Compensation` did not indicate that it had its own primary id, and instead was defined by the id of the `Employee` it was associated with.
+This presented an issue when trying to query for `Compensation` using only an `employeeId`, as the field wasn't defined directly on the data class.
+
+Because `Compensation` is defined with an `Employee` and queried through `employeeId`, I made sure to check that an `Employee` existed before creating a `Compensation` object for that employee. Additionally, when reading compenstaion for an employee, if a `Compensation` object is not found, then it is also checked if an `Employee` onject existed, and errors messages are given accordingly.
+
+When creating multiple `Compensation` objects for a single employee, there was an issue with multiple results being returned which was unexpected by the method. To combat this, I set up `CompensationRepository::findByEmployeeId` to query using an aggregation method.
+```java
+@Aggregation(pipeline = {
+    "{ '$match': {'employee': { 'employeeId' : ?0 }} }", 
+    "{ '$sort' : { 'effectiveDate' : -1 } }",
+    "{ '$limit' : 1 }"
+})
+Compensation findByEmployeeId(@Param("employeeId") String employeeId);
+```
