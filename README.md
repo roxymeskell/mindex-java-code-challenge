@@ -87,9 +87,10 @@ Please upload your results to a publicly accessible Git repo. Free ones are prov
 
 
 # Challange Notes
+A stream of consciousness of how I solved this challange.
 
 ### Task 1
-Question: Can one Employee have more than one direct supervisor? There does not seem to be any constraint, especially considering the data structure given.
+Can one Employee have more than one direct supervisor? There does not seem to be any constraint, especially considering the data structure given.
 (I.e., an employee having a list of direct reports as opposed to an employee having a singular direct supervisor.)
 This means that, if not careful, employees in reporting structures could be counted twice.
 The lack on constraints also appear to let an employee possibly report directly to themselves, or in a loop.
@@ -104,6 +105,7 @@ int getNumberOfReports(Employee employee) {
     return numberOfReports;
 }
 ```
+
 My first thought was nailing down the algorithm. I used a breadth-first search while keeping track of employees I had already seen. Then I discovered that the employee data for direct reports were not fleshed out beyond their IDs (which makes sense). Reworked code to check `employeeRepository` for each employee ID found in order to trace the reporting structure.
 
 For testing, I mocked responses from `employeeRepository` in order to present different scenarios with different reporting structures. The tests were used to validate the algorithm used to discover the reporting structure.
@@ -125,10 +127,11 @@ ReportingStructure findNumberOfReports(String employeeId);
 ```
 
 ### Task 2
-I first created all the class components I would need: the data class, the service class, and the controller. To persist the data, and repository was also needed.
+First I created the class components I would need: the data class, the service class, and the controller. To persist the data, and repository was also needed.
 
 The description of `Compensation` did not indicate that it had its own primary id, and instead was defined by the id of the `Employee` it was associated with.
 This presented an issue when trying to query for `Compensation` using only an `employeeId`, as the field wasn't defined directly on the data class.
+Ultimately I fixed this using annotations to define a custom query (and eventually aggeration pipeline) for the find function.
 
 Because `Compensation` is defined with an `Employee` and queried through `employeeId`, I made sure to check that an `Employee` existed before creating a `Compensation` object for that employee. Additionally, when reading compenstaion for an employee, if a `Compensation` object is not found, then it is also checked if an `Employee` object existed, and errors messages are given accordingly.
 
