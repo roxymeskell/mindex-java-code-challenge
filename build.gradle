@@ -8,12 +8,26 @@ buildscript {
 	dependencies {
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
 	}
+	// test {
+	// 	afterTest { desc, result -> 
+	// 		logger.quiet "Executing test ${desc.name} [${desc.className}] with result: ${result.resultType}"
+	// 	}
+	// }
+	repositories {
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+    }
+    dependencies {
+        classpath 'com.adarshr:gradle-test-logger-plugin:2.1.1'
+    }
 }
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.adarshr.test-logger'
 
 group = 'com.mindex'
 version = '0.0.1-SNAPSHOT'

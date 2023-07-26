@@ -7,7 +7,6 @@ import com.mindex.challenge.service.ReportingStructureService;
 import java.util.LinkedList;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,9 +43,10 @@ public class ReportingStructureServiceImplTest {
     }
 
     @Test
-    @DisplayName("Assert fails on employee not existing")
-    public void testReadForEmployeeDoesNotExist() {
-        // Read check
+    /**
+     * Test that reading a reporting structure fails when given an invalid employee
+     */
+    public void failWhenEmployeeDoesNotExist() {
         ResponseEntity<ReportingStructure> response = restTemplate.getForEntity(
             reportingStructureUrl,
             ReportingStructure.class,
@@ -56,8 +56,11 @@ public class ReportingStructureServiceImplTest {
     }
 
     @Test
-    @DisplayName("Assert returns 0 reports when given an employee with no reports")
-    public void testReadForNoReports() {
+    /**
+     * Test that reading a reporting struture returns a report
+     * count of 0 when given an employee with no direct reports
+     */
+    public void readWhenEmployeeHasNoReports() {
         String testEmployeeId = setupEmployees(new int[][]{{}});
         ReportingStructure readReportingStructure = restTemplate.getForEntity(
             reportingStructureUrl,
@@ -68,8 +71,16 @@ public class ReportingStructureServiceImplTest {
     }
 
     @Test
-    @DisplayName("Assert returns reports when given tree")
-    public void testReadForHasReports() {
+    /**
+     * Test that reading a report structure returns a report
+     * count of 5 when given the following employee structure.
+     *       A (Root)
+     *       /     \
+     *      B _     C
+     *     /   \     \
+     *    D     E     F
+     */
+    public void readWhenEmployeeReportsIsTree() {
         String testEmployeeId = setupEmployees(new int[][]{{1, 2}, {3, 4}, {5}, {}, {}, {}});
         ReportingStructure readReportingStructure = restTemplate.getForEntity(
             reportingStructureUrl,
@@ -80,8 +91,16 @@ public class ReportingStructureServiceImplTest {
     }
 
     @Test
-    @DisplayName("Assert returns reports when given an employee who reports to two others")
-    public void testReadForMultipleSupervisers() {
+    /**
+     * Test that reading a report structure returns a report
+     * count of 5 when given the following employee structure.
+     *       A (Root)
+     *       /     \
+     *      B _   _ C
+     *     /   \ /   \
+     *    D     E     F
+     */
+    public void readWhenMultipleEmployeesHaveSameReport() {
         String testEmployeeId = setupEmployees(new int[][]{{1, 2}, {3, 4}, {4, 5}, {}, {}, {}});
         ReportingStructure readReportingStructure = restTemplate.getForEntity(
             reportingStructureUrl,
@@ -92,8 +111,11 @@ public class ReportingStructureServiceImplTest {
     }
 
     @Test
-    @DisplayName("Assert returns reports when given employee reporting to themself")
-    public void testReadForReportsToSelf() {
+    /**
+     * Test that reading a report structure returns a report
+     * count of 0 when given an employee who reports to themself.
+     */
+    public void readWhenEmployeeReportsToSelf() {
         String testEmployeeId = setupEmployees(new int[][]{{0}});
         ReportingStructure readReportingStructure = restTemplate.getForEntity(
             reportingStructureUrl,
