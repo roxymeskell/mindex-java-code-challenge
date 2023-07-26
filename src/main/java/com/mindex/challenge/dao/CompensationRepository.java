@@ -4,7 +4,6 @@ import com.mindex.challenge.data.Compensation;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface CompensationRepository extends MongoRepository<Compensation, String> {
@@ -14,6 +13,6 @@ public interface CompensationRepository extends MongoRepository<Compensation, St
         "{ '$sort' : { 'effectiveDate' : -1 } }",
         "{ '$limit' : 1 }"
     })
-    Compensation findByEmployeeId(@Param("employeeId") String employeeId);
+    Compensation findByEmployeeId(String employeeId);
 
 }
