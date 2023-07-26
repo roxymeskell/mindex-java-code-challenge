@@ -1,3 +1,4 @@
+![Test Workflow](https://github.com/roxymeskell/mindex-java-code-challenge/actions/workflows/gradle-test.yml/badge.svg)
 # Coding Challenge
 ## What's Provided
 A simple [Spring Boot](https://projects.spring.io/spring-boot/) web application has been created and bootstrapped 
